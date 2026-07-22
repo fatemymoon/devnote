@@ -29,8 +29,14 @@ DEBUG = os.environ.get(
     "DJANGO_DEBUG",
     "True",
 ).lower() == "true"
-ALLOWED_HOSTS = []
 
+
+ALLOWED_HOSTS = [
+    "127.0.0.1",
+    "localhost",
+    "100.85.78.60",
+    "fate-server",
+]
 
 # Application definition
 
