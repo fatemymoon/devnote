@@ -1,0 +1,43 @@
+{% extends "notes/base.html" %}
+
+{% block title %}
+    개발노트 삭제
+{% endblock %}
+
+{% block content %}
+    <section class="page-header">
+        <h1>개발노트 삭제</h1>
+
+        <p class="page-description">
+            삭제한 노트는 현재 복구할 수 없습니다.
+        </p>
+    </section>
+
+    <section class="card danger-card">
+        <p>
+            아래 노트를 정말 삭제하시겠습니까?
+        </p>
+
+        <h2>{{ note.title }}</h2>
+
+        <form method="post">
+            {% csrf_token %}
+
+            <div class="action-row">
+                <button
+                    class="button button-danger"
+                    type="submit"
+                >
+                    삭제 확인
+                </button>
+
+                <a
+                    class="button button-secondary"
+                    href="{% url 'notes:detail' note.pk %}"
+                >
+                    취소
+                </a>
+            </div>
+        </form>
+    </section>
+{% endblock %}

@@ -1,0 +1,86 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>
+        {% block title %}
+            개발노트
+        {% endblock %}
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="{% static 'notes/style.css' %}"
+    >
+</head>
+
+<body>
+    <header class="site-header">
+        <div class="container header-inner">
+            <a
+                class="brand"
+                href="{% url 'notes:list' %}"
+            >
+                개발노트
+            </a>
+
+            <nav class="navigation">
+                {% if user.is_authenticated %}
+                    <span class="user-name">
+                        {{ user.username }}님
+                    </span>
+
+                    <a href="{% url 'notes:list' %}">
+                        노트 목록
+                    </a>
+
+                    <a
+                        class="button button-primary"
+                        href="{% url 'notes:create' %}"
+                    >
+                        새 노트
+                    </a>
+
+                    {% if user.is_staff %}
+                        <a href="/admin/">
+                            관리
+                        </a>
+                    {% endif %}
+
+                    <form
+                        class="logout-form"
+                        method="post"
+                        action="{% url 'logout' %}"
+                    >
+                        {% csrf_token %}
+
+                        <button
+                            class="logout-button"
+                            type="submit"
+                        >
+                            로그아웃
+                        </button>
+                    </form>
+                {% else %}
+                    <a href="{% url 'login' %}">
+                        로그인
+                    </a>
+                {% endif %}
+            </nav>
+        </div>
+    </header>
+
+    <main class="container main-content">
+        {% block content %}
+        {% endblock %}
+    </main>
+</body>
+</html>

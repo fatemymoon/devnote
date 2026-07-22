@@ -1,0 +1,39 @@
+{% extends "notes/base.html" %}
+
+{% block title %}
+    {{ form_title }}
+{% endblock %}
+
+{% block content %}
+    <section class="page-header">
+        <h1>{{ form_title }}</h1>
+
+        <p class="page-description">
+            개발 과정에서 배운 내용과 명령어를 기록하세요.
+        </p>
+    </section>
+
+    <section class="card form-card">
+        <form method="post">
+            {% csrf_token %}
+
+            {{ form.as_p }}
+
+            <div class="action-row">
+                <button
+                    class="button button-primary"
+                    type="submit"
+                >
+                    저장
+                </button>
+
+                <a
+                    class="button button-secondary"
+                    href="{% url 'notes:list' %}"
+                >
+                    취소
+                </a>
+            </div>
+        </form>
+    </section>
+{% endblock %}

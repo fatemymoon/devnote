@@ -1,0 +1,69 @@
+{% extends "notes/base.html" %}
+
+{% block title %}
+    {{ note.title }}
+{% endblock %}
+
+{% block content %}
+    <section class="page-header">
+        <p>
+            <a href="{% url 'notes:list' %}">
+                ← 목록으로
+            </a>
+        </p>
+
+        <h1>
+            {% if note.is_pinned %}
+                📌
+            {% endif %}
+
+            {{ note.title }}
+        </h1>
+    </section>
+
+    <article class="card">
+        <div class="note-meta">
+            {% if note.category %}
+                <span class="badge">
+                    {{ note.category }}
+                </span>
+            {% endif %}
+
+            {% if note.tags %}
+                <span class="badge">
+                    {{ note.tags }}
+                </span>
+            {% endif %}
+        </div>
+
+        <div class="note-content">
+            {{ note.content|linebreaksbr }}
+        </div>
+
+        <p class="note-date">
+            작성일:
+            {{ note.created_at|date:"Y년 m월 d일 H:i" }}
+        </p>
+
+        <p class="note-date">
+            수정일:
+            {{ note.updated_at|date:"Y년 m월 d일 H:i" }}
+        </p>
+
+        <div class="action-row">
+            <a
+                class="button button-primary"
+                href="{% url 'notes:update' note.pk %}"
+            >
+                수정
+            </a>
+
+            <a
+                class="button button-danger"
+                href="{% url 'notes:delete' note.pk %}"
+            >
+                삭제
+            </a>
+        </div>
+    </article>
+{% endblock %}
