@@ -34,7 +34,10 @@ services:
 
     init: true
 
-    healthcheck:
+volumes:
+      - ./staticfiles:/app/staticfiles
+
+healthcheck:
       test:
         - CMD
         - python
@@ -45,7 +48,7 @@ services:
       retries: 3
       start_period: 30s
 
-  db:
+db:
     image: postgres:16
     container_name: devnote-db
 
@@ -68,5 +71,5 @@ services:
       timeout: 5s
       retries: 5
 
-volumes:
-  postgres_data:
+      volumes:
+    postgres_data:
