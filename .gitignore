@@ -11,6 +11,7 @@ db.sqlite3
 
 # 환경변수와 비밀정보
 .env
+.env.docker
 
 # 배포 과정에서 수집되는 정적 파일
 staticfiles/

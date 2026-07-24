@@ -1,0 +1,72 @@
+services:
+  web:
+    image: devnote:1.0.0
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+    container_name: devnote-web
+
+    env_file:
+      - .env.docker
+
+    command:
+      - sh
+      - -c
+      - |
+        python manage.py migrate &&
+        python manage.py collectstatic --noinput &&
+        exec gunicorn config.wsgi:application \
+          --bind 0.0.0.0:8000 \
+          --workers 2 \
+          --timeout 120 \
+          --access-logfile - \
+          --error-logfile -
+
+    ports:
+      - "127.0.0.1:8000:8000"
+
+    depends_on:
+      db:
+        condition: service_healthy
+
+    restart: unless-stopped
+
+    init: true
+
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import socket; s=socket.create_connection(('127.0.0.1', 8000), 5); s.close()"
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  db:
+    image: postgres:16
+    container_name: devnote-db
+
+    env_file:
+      - .env.docker
+
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+    restart: unless-stopped
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
