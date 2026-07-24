@@ -26,6 +26,9 @@ services:
     ports:
       - "127.0.0.1:8000:8000"
 
+    volumes:
+      - ./staticfiles:/app/staticfiles
+
     depends_on:
       db:
         condition: service_healthy
@@ -34,10 +37,7 @@ services:
 
     init: true
 
-volumes:
-      - ./staticfiles:/app/staticfiles
-
-healthcheck:
+    healthcheck:
       test:
         - CMD
         - python
@@ -48,7 +48,7 @@ healthcheck:
       retries: 3
       start_period: 30s
 
-db:
+  db:
     image: postgres:16
     container_name: devnote-db
 
@@ -71,5 +71,5 @@ db:
       timeout: 5s
       retries: 5
 
-      volumes:
-    postgres_data:
+volumes:
+  postgres_data:
