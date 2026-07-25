@@ -12,76 +12,97 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 
 from pathlib import Path
 import os
-from dotenv import load_dotenv
-load_dotenv()
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
+from dotenv import load_dotenv  # .env 파일을 읽어 환경 변수로 등록해 주는 라이브러리
+load_dotenv()  # 프로젝트 루트의 .env 파일을 읽어 os.environ에 주입
+
+# 프로젝트 최상위 폴더의 절대 경로 (이 파일 기준 두 단계 위 = manage.py가 있는 곳)
+# 이후 BASE_DIR / 'subdir' 형태로 경로를 만들 때 사용
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
+# 세션·CSRF 토큰 등을 서명(암호화)할 때 쓰는 비밀 키.
+# 운영 환경에서는 반드시 환경 변수 DJANGO_SECRET_KEY로 주입하고,
+# 환경 변수가 없을 때만 개발용 기본값을 사용합니다.
 SECRET_KEY = os.environ.get(
     "DJANGO_SECRET_KEY",
-    "dev-only-unsafe-secret-key",
+    "dev-only-unsafe-secret-key"
 )
-# SECURITY WARNING: don't run with debug turned on in production!
+
+# 디버그 모드: True면 에러 발생 시 상세 화면을 보여줍니다. (운영에서는 반드시 False)
+# 환경 변수 값이 문자열이므로 "true"인지 비교해서 불리언으로 변환합니다.
 DEBUG = os.environ.get(
     "DJANGO_DEBUG",
     "True",
 ).lower() == "true"
+
+# 이 서버로 접속을 허용할 도메인 목록 (쉼표로 구분해 환경 변수로 주입)
 ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS", "").split(",")
+
+# CSRF 검사를 통과시킬 신뢰 출처(origin) 목록.
+# HTTPS 프록시(예: 클라우드플레어, nginx) 뒤에서 POST 요청이 막히지 않도록 설정합니다.
 CSRF_TRUSTED_ORIGINS = [o for o in os.environ.get("DJANGO_CSRF_TRUSTED_ORIGINS", "").split(",") if o]
+
+# 프록시가 붙여주는 X-Forwarded-Proto 헤더가 https이면
+# Django가 "이 요청은 HTTPS로 들어왔다"고 인식하게 합니다.
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 
-# Application definition
+# 이 프로젝트에서 사용하는 앱(기능 묶음) 목록
 
 INSTALLED_APPS = [
-    "django.contrib.admin",
-    "django.contrib.auth",
-    "django.contrib.contenttypes",
-    "django.contrib.sessions",
-    "django.contrib.messages",
-    "django.contrib.staticfiles",
-    "notes.apps.NotesConfig",
-    "assignments.apps.AssignmentsConfig",
-    "qna.apps.QnaConfig",
+    "django.contrib.admin",         # 관리자 페이지 (/admin/)
+    "django.contrib.auth",          # 로그인/사용자 인증
+    "django.contrib.contenttypes",  # 모델 메타 정보 (auth 등이 내부적으로 사용)
+    "django.contrib.sessions",      # 세션(로그인 상태 유지)
+    "django.contrib.messages",      # 일회성 알림 메시지
+    "django.contrib.staticfiles",   # 정적 파일(CSS/JS) 수집·서빙
+    #### 내가 만든 앱들
+    "notes.apps.NotesConfig",             # 개발노트 (개인 학습 기록)
+    "assignments.apps.AssignmentsConfig", # 과제 출제/제출 (멘토·멘티)
+    "qna.apps.QnaConfig",                 # 질의응답 게시판
 ]
 
+# 미들웨어: 모든 요청/응답이 위에서 아래 순서로 거쳐가는 처리 계층
 MIDDLEWARE = [
-    "django.middleware.security.SecurityMiddleware",
-    "whitenoise.middleware.WhiteNoiseMiddleware",
-    "django.contrib.sessions.middleware.SessionMiddleware",
-    "django.middleware.common.CommonMiddleware",
-    "django.middleware.csrf.CsrfViewMiddleware",
-    "django.contrib.auth.middleware.AuthenticationMiddleware",
-    "django.contrib.messages.middleware.MessageMiddleware",
-    "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "django.middleware.security.SecurityMiddleware",             # 기본 보안 헤더 추가
+    "whitenoise.middleware.WhiteNoiseMiddleware",                # 정적 파일을 Django가 직접 서빙 (gunicorn 배포용)
+    "django.contrib.sessions.middleware.SessionMiddleware",      # 세션 쿠키 처리
+    "django.middleware.common.CommonMiddleware",                 # URL 정규화 등 공통 처리
+    "django.middleware.csrf.CsrfViewMiddleware",                 # CSRF 공격 방어 (POST 폼 토큰 검사)
+    "django.contrib.auth.middleware.AuthenticationMiddleware",   # request.user 붙여주기
+    "django.contrib.messages.middleware.MessageMiddleware",      # 알림 메시지 처리
+    "django.middleware.clickjacking.XFrameOptionsMiddleware",    # iframe 삽입 공격 방어
 ]
 
+# 최상위 URL 설정 파일 위치 (config/urls.py)
 ROOT_URLCONF = 'config.urls'
 
+# 템플릿(HTML) 렌더링 설정
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
-        'APP_DIRS': True,
+        'DIRS': [],          # 프로젝트 공통 템플릿 폴더 (현재는 사용 안 함)
+        'APP_DIRS': True,    # 각 앱 안의 templates/ 폴더를 자동으로 탐색
         'OPTIONS': {
+            # 모든 템플릿에서 기본으로 쓸 수 있는 변수들을 주입
             'context_processors': [
-                'django.template.context_processors.request',
-                'django.contrib.auth.context_processors.auth',
-                'django.contrib.messages.context_processors.messages',
+                'django.template.context_processors.request',   # {{ request }}
+                'django.contrib.auth.context_processors.auth',  # {{ user }}
+                'django.contrib.messages.context_processors.messages',  # {{ messages }}
             ],
         },
     },
 ]
 
+# 배포 시 gunicorn이 사용할 WSGI 진입점
 WSGI_APPLICATION = 'config.wsgi.application'
 
 
 # Database
+# PostgreSQL 사용. 접속 정보는 전부 환경 변수(.env)에서 읽어옵니다.
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
 DATABASES = {
@@ -97,6 +118,7 @@ DATABASES = {
 
 
 # Password validation
+# 회원 비밀번호 규칙 검사 (아이디와 유사한지, 너무 짧은지, 흔한 비밀번호인지, 숫자만인지)
 # https://docs.djangoproject.com/en/6.0/ref/settings/#auth-password-validators
 
 AUTH_PASSWORD_VALIDATORS = [
@@ -115,33 +137,36 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 
-# Internationalization
+# Internationalization (언어/시간대 설정)
 # https://docs.djangoproject.com/en/6.0/topics/i18n/
 
-LANGUAGE_CODE = 'ko-kr'
+LANGUAGE_CODE = 'ko-kr'      # 관리자 페이지 등 기본 언어를 한국어로
 
-TIME_ZONE = 'Asia/Seoul'
+TIME_ZONE = 'Asia/Seoul'     # 화면에 표시할 시간대 (한국 시간)
 
-USE_I18N = True
+USE_I18N = True              # 다국어 번역 기능 사용
 
-USE_TZ = True
+USE_TZ = True                # DB에는 UTC로 저장하고 표시할 때만 KST로 변환
 
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
-STATIC_URL = 'static/'
-STATIC_ROOT = BASE_DIR / "staticfiles"
+STATIC_URL = 'static/'                    # 정적 파일 URL 접두사 (예: /static/style.css)
+STATIC_ROOT = BASE_DIR / "staticfiles"    # collectstatic 실행 시 파일이 모이는 폴더
 
-# Media files (사용자가 업로드하는 첨부파일)
+# Media files (사용자가 업로드하는 첨부파일 — 과제 제출물 등)
 
-MEDIA_URL = "media/"
-MEDIA_ROOT = BASE_DIR / "media"
+MEDIA_URL = "media/"               # 업로드 파일 URL 접두사
+MEDIA_ROOT = BASE_DIR / "media"    # 업로드 파일이 실제로 저장되는 폴더
 
+# 파일 저장 방식 설정
 STORAGES = {
+    # 업로드 파일(media)은 서버 디스크에 그대로 저장
     "default": {
         "BACKEND": "django.core.files.storage.FileSystemStorage",
     },
+    # 정적 파일은 whitenoise로 압축 + 파일명에 해시를 붙여 캐시 문제 방지
     "staticfiles": {
         "BACKEND": (
             "whitenoise.storage."
@@ -150,13 +175,16 @@ STORAGES = {
     },
 }
 
-LOGIN_URL = "login"
-LOGIN_REDIRECT_URL = "assignments:list"
-LOGOUT_REDIRECT_URL = "login"
+# 로그인 관련 이동 경로
+LOGIN_URL = "login"                        # 미로그인 사용자를 보낼 로그인 페이지
+LOGIN_REDIRECT_URL = "assignments:list"    # 로그인 성공 후 이동할 곳 (과제 목록)
+LOGOUT_REDIRECT_URL = "login"              # 로그아웃 후 이동할 곳
 
 
 # CoolSMS(솔라피) 문자 알림
+# 과제 등록/제출, 질문/답변 시 문자를 보내기 위한 API 인증 정보.
+# 값이 비어 있으면 문자를 보내지 않고 넘어갑니다. (assignments/sms.py 참고)
 
 COOLSMS_API_KEY = os.environ.get("COOLSMS_API_KEY", "")
 COOLSMS_API_SECRET = os.environ.get("COOLSMS_API_SECRET", "")
-COOLSMS_SENDER = os.environ.get("COOLSMS_SENDER", "")
+COOLSMS_SENDER = os.environ.get("COOLSMS_SENDER", "")  # 발신 번호 (사전 등록된 번호)

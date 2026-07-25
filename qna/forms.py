@@ -1,3 +1,10 @@
+"""질의응답(QnA) 앱의 입력 폼 정의.
+
+- QuestionForm: 학생의 질문 작성/수정 폼
+- AnswerForm: 멘토의 답변 작성/수정 폼
+둘 다 내용(content) 한 필드만 입력받고, 작성자는 뷰에서 자동으로 채웁니다.
+"""
+
 from django import forms
 
 from .models import Answer, Question
