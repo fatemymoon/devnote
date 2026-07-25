@@ -8,6 +8,7 @@ class ProfileAdmin(admin.ModelAdmin):
     list_display = (
         "user",
         "role",
+        "phone",
     )
 
     list_filter = (

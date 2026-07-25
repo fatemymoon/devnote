@@ -154,19 +154,8 @@ LOGIN_REDIRECT_URL = "notes:list"
 LOGOUT_REDIRECT_URL = "login"
 
 
-# Email (과제 알림용, Gmail SMTP)
-# 로컬 개발 기본값은 콘솔 출력 백엔드라서 실제 메일이 나가지 않습니다.
+# CoolSMS(솔라피) 문자 알림
 
-EMAIL_BACKEND = os.environ.get(
-    "DJANGO_EMAIL_BACKEND",
-    "django.core.mail.backends.console.EmailBackend",
-)
-EMAIL_HOST = os.environ.get("EMAIL_HOST", "smtp.gmail.com")
-EMAIL_PORT = int(os.environ.get("EMAIL_PORT", "587"))
-EMAIL_USE_TLS = True
-EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER", "")
-EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", "")
-DEFAULT_FROM_EMAIL = os.environ.get(
-    "DEFAULT_FROM_EMAIL",
-    EMAIL_HOST_USER or "devnote@localhost",
-)
+COOLSMS_API_KEY = os.environ.get("COOLSMS_API_KEY", "")
+COOLSMS_API_SECRET = os.environ.get("COOLSMS_API_SECRET", "")
+COOLSMS_SENDER = os.environ.get("COOLSMS_SENDER", "")

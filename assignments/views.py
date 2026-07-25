@@ -3,7 +3,7 @@ from django.db.models import Count, Q
 from django.shortcuts import get_object_or_404, redirect, render
 
 from .decorators import is_mentor, mentee_required, mentor_required
-from .emails import send_new_assignment_email, send_submission_completed_email
+from .sms import send_new_assignment_sms, send_submission_completed_sms
 from .forms import AssignmentForm, SubmissionForm
 from .models import Assignment, Submission
 
@@ -104,7 +104,7 @@ def assignment_detail(request, pk):
                 new_submission.status == Submission.Status.COMPLETED
                 and not was_completed
             ):
-                send_submission_completed_email(new_submission)
+                send_submission_completed_sms(new_submission)
 
             return redirect("assignments:detail", pk=assignment.pk)
     else:
@@ -134,7 +134,7 @@ def assignment_create(request):
             assignment.created_by = request.user
             assignment.save()
 
-            send_new_assignment_email(assignment)
+            send_new_assignment_sms(assignment)
 
             return redirect("assignments:detail", pk=assignment.pk)
     else:

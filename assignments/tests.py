@@ -1,38 +1,37 @@
+from unittest.mock import patch
+
 from django.contrib.auth import get_user_model
-from django.core import mail
-from django.test import TestCase, override_settings
+from django.test import TestCase
 from django.urls import reverse
 
+from . import sms
 from .models import Assignment, Profile, Submission
 
 User = get_user_model()
 
 
-@override_settings(
-    EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend",
-)
-class AssignmentFlowTests(TestCase):
-    """멘토/멘티 역할별 권한과 알림 이메일을 검증합니다."""
+class RoleSetupMixin:
+    """멘토/멘티 계정과 과제 하나를 만들어 두는 공통 준비 코드입니다."""
 
     def setUp(self):
         self.mentor = User.objects.create_user(
             username="mentor",
             password="pass1234",
-            email="mentor@example.com",
         )
         Profile.objects.create(
             user=self.mentor,
             role=Profile.Role.MENTOR,
+            phone="01011112222",
         )
 
         self.student = User.objects.create_user(
             username="student",
             password="pass1234",
-            email="student@example.com",
         )
         Profile.objects.create(
             user=self.student,
             role=Profile.Role.MENTEE,
+            phone="01033334444",
         )
 
         self.assignment = Assignment.objects.create(
@@ -40,6 +39,10 @@ class AssignmentFlowTests(TestCase):
             description="설명",
             created_by=self.mentor,
         )
+
+
+class AssignmentFlowTests(RoleSetupMixin, TestCase):
+    """멘토/멘티 역할별 권한과 문자 알림 트리거를 검증합니다."""
 
     def test_login_required(self):
         response = self.client.get(reverse("assignments:list"))
@@ -51,7 +54,8 @@ class AssignmentFlowTests(TestCase):
         response = self.client.get(reverse("assignments:create"))
         self.assertEqual(response.status_code, 403)
 
-    def test_mentor_creates_assignment_and_email_sent(self):
+    @patch("assignments.views.send_new_assignment_sms")
+    def test_mentor_creates_assignment_and_sms_sent(self, mock_send):
         self.client.login(username="mentor", password="pass1234")
 
         response = self.client.post(
@@ -63,10 +67,10 @@ class AssignmentFlowTests(TestCase):
         )
 
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(len(mail.outbox), 1)
-        self.assertIn("student@example.com", mail.outbox[0].to)
+        mock_send.assert_called_once()
 
-    def test_mentee_submission_complete_sends_email_to_mentor(self):
+    @patch("assignments.views.send_submission_completed_sms")
+    def test_mentee_submission_complete_sends_sms(self, mock_send):
         self.client.login(username="student", password="pass1234")
 
         response = self.client.post(
@@ -84,11 +88,10 @@ class AssignmentFlowTests(TestCase):
             student=self.student,
         )
         self.assertEqual(submission.status, Submission.Status.COMPLETED)
+        mock_send.assert_called_once()
 
-        self.assertEqual(len(mail.outbox), 1)
-        self.assertIn("mentor@example.com", mail.outbox[0].to)
-
-    def test_mentee_draft_does_not_send_email(self):
+    @patch("assignments.views.send_submission_completed_sms")
+    def test_mentee_draft_does_not_send_sms(self, mock_send):
         self.client.login(username="student", password="pass1234")
 
         self.client.post(
@@ -104,9 +107,10 @@ class AssignmentFlowTests(TestCase):
             student=self.student,
         )
         self.assertEqual(submission.status, Submission.Status.IN_PROGRESS)
-        self.assertEqual(len(mail.outbox), 0)
+        mock_send.assert_not_called()
 
-    def test_completed_resubmit_does_not_send_duplicate_email(self):
+    @patch("assignments.views.send_submission_completed_sms")
+    def test_completed_resubmit_does_not_send_duplicate_sms(self, mock_send):
         self.client.login(username="student", password="pass1234")
 
         for _ in range(2):
@@ -118,7 +122,7 @@ class AssignmentFlowTests(TestCase):
                 },
             )
 
-        self.assertEqual(len(mail.outbox), 1)
+        mock_send.assert_called_once()
 
     def test_mentee_cannot_delete_other_students_submission(self):
         other = User.objects.create_user(
@@ -165,3 +169,44 @@ class AssignmentFlowTests(TestCase):
 
         self.assertContains(response, "학생 제출물")
         self.assertContains(response, "student")
+
+
+class SmsRecipientTests(RoleSetupMixin, TestCase):
+    """문자 수신자 선정 로직을 검증합니다."""
+
+    @patch("assignments.sms.send_sms")
+    def test_new_assignment_sms_goes_to_mentee_phones(self, mock_send):
+        sms.send_new_assignment_sms(self.assignment)
+
+        mock_send.assert_called_once()
+        self.assertEqual(mock_send.call_args.args[0], "01033334444")
+
+    @patch("assignments.sms.send_sms")
+    def test_completed_sms_goes_to_mentor_phone(self, mock_send):
+        submission = Submission.objects.create(
+            assignment=self.assignment,
+            student=self.student,
+            content="완료",
+            status=Submission.Status.COMPLETED,
+        )
+
+        sms.send_submission_completed_sms(submission)
+
+        mock_send.assert_called_once()
+        self.assertEqual(mock_send.call_args.args[0], "01011112222")
+
+    @patch("assignments.sms.send_sms")
+    def test_no_sms_when_mentor_has_no_phone(self, mock_send):
+        self.mentor.profile.phone = ""
+        self.mentor.profile.save()
+
+        submission = Submission.objects.create(
+            assignment=self.assignment,
+            student=self.student,
+            content="완료",
+            status=Submission.Status.COMPLETED,
+        )
+
+        sms.send_submission_completed_sms(submission)
+
+        mock_send.assert_not_called()

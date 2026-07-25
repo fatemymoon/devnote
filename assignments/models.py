@@ -23,6 +23,13 @@ class Profile(models.Model):
         verbose_name="역할",
     )
 
+    phone = models.CharField(
+        max_length=20,
+        blank=True,
+        verbose_name="휴대폰 번호",
+        help_text="문자 알림을 받을 번호입니다. 예: 01012345678",
+    )
+
     class Meta:
         verbose_name = "프로필"
         verbose_name_plural = "프로필"
