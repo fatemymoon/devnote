@@ -1,0 +1,131 @@
+{% extends "notes/base.html" %}
+
+{% block title %}
+    과제목록
+{% endblock %}
+
+{% block content %}
+    <section class="page-header">
+        <h1>과제목록</h1>
+
+        <p class="page-description">
+            등록된 전체 과제를 확인합니다.
+        </p>
+    </section>
+
+    <section class="card search-card">
+        <form
+            class="search-form"
+            method="get"
+        >
+            <div class="form-group">
+                <label for="search">
+                    검색어
+                </label>
+
+                <input
+                    type="search"
+                    id="search"
+                    name="q"
+                    value="{{ search_query }}"
+                    placeholder="제목, 설명 검색"
+                >
+            </div>
+
+            <button
+                class="button button-primary"
+                type="submit"
+            >
+                검색
+            </button>
+        </form>
+
+        {% if search_query %}
+            <div class="action-row">
+                <a
+                    class="button button-secondary"
+                    href="{% url 'assignments:list' %}"
+                >
+                    검색 초기화
+                </a>
+            </div>
+        {% endif %}
+    </section>
+
+    {% if rows %}
+        <section class="card board-card">
+            <table class="board-table">
+                <thead>
+                    <tr>
+                        <th>제목</th>
+                        <th>등록일</th>
+                        <th>마감일</th>
+                        <th>상태</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for row in rows %}
+                        <tr>
+                            <td>
+                                <a href="{% url 'assignments:detail' row.assignment.pk %}">
+                                    {{ row.assignment.title }}
+                                </a>
+                            </td>
+
+                            <td class="board-date">
+                                {{ row.assignment.created_at|date:"Y.m.d" }}
+                            </td>
+
+                            <td class="board-date">
+                                {% if row.assignment.due_date %}
+                                    {{ row.assignment.due_date|date:"Y.m.d" }}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                {% include "assignments/_status_badge.html" with submission=row.submission %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </section>
+
+        {% if page_obj.has_other_pages %}
+            <nav class="pagination">
+                {% if page_obj.has_previous %}
+                    <a
+                        class="button button-secondary"
+                        href="?page={{ page_obj.previous_page_number }}{% if search_query %}&q={{ search_query|urlencode }}{% endif %}"
+                    >
+                        이전
+                    </a>
+                {% endif %}
+
+                <span class="current-page">
+                    {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}
+                </span>
+
+                {% if page_obj.has_next %}
+                    <a
+                        class="button button-secondary"
+                        href="?page={{ page_obj.next_page_number }}{% if search_query %}&q={{ search_query|urlencode }}{% endif %}"
+                    >
+                        다음
+                    </a>
+                {% endif %}
+            </nav>
+        {% endif %}
+    {% else %}
+        <div class="empty-state">
+            {% if search_query %}
+                검색 조건에 맞는 과제가 없습니다.
+            {% else %}
+                아직 등록된 과제가 없습니다.
+            {% endif %}
+        </div>
+    {% endif %}
+{% endblock %}

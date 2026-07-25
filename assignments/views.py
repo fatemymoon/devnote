@@ -1,4 +1,5 @@
 from django.contrib.auth.decorators import login_required
+from django.core.paginator import Paginator
 from django.db.models import Count, Q
 from django.shortcuts import get_object_or_404, redirect, render
 
@@ -10,43 +11,107 @@ from .models import Assignment, Submission
 
 @login_required
 def assignment_list(request):
-    """과제 목록을 역할에 따라 다르게 보여줍니다."""
+    """전체 과제를 게시판 형태로 보여줍니다. 멘토/멘티 모두 접근할 수 있습니다."""
+
+    assignments = Assignment.objects.all()
+
+    search_query = request.GET.get("q", "").strip()
+
+    if search_query:
+        assignments = assignments.filter(
+            Q(title__icontains=search_query)
+            | Q(description__icontains=search_query)
+        )
+
+    paginator = Paginator(assignments, 20)
+    page_obj = paginator.get_page(request.GET.get("page"))
+
+    submissions = Submission.objects.filter(
+        assignment__in=page_obj.object_list,
+    )
+
+    if not is_mentor(request.user):
+        submissions = submissions.filter(student=request.user)
+
+    status_map = {
+        submission.assignment_id: submission
+        for submission in submissions
+    }
+
+    rows = [
+        {
+            "assignment": assignment,
+            "submission": status_map.get(assignment.pk),
+        }
+        for assignment in page_obj.object_list
+    ]
+
+    return render(
+        request,
+        "assignments/assignment_list.html",
+        {
+            "rows": rows,
+            "page_obj": page_obj,
+            "search_query": search_query,
+        },
+    )
+
+
+@login_required
+def assignment_workspace(request):
+    """역할별 개인 작업 화면입니다. 멘토는 과제출제, 멘티는 과제제출."""
 
     if is_mentor(request.user):
-        assignments = Assignment.objects.annotate(
-            submission_count=Count("submissions"),
-            completed_count=Count(
-                "submissions",
-                filter=Q(submissions__status=Submission.Status.COMPLETED),
-            ),
+        assignments = (
+            Assignment.objects.filter(created_by=request.user)
+            .annotate(
+                submission_count=Count("submissions"),
+                completed_count=Count(
+                    "submissions",
+                    filter=Q(submissions__status=Submission.Status.COMPLETED),
+                ),
+            )
+            .prefetch_related("submissions__student")
         )
 
         return render(
             request,
-            "assignments/assignment_list_mentor.html",
+            "assignments/assignment_workspace_mentor.html",
             {
                 "assignments": assignments,
             },
         )
-
-    assignments = Assignment.objects.all()
 
     my_submissions = {
         submission.assignment_id: submission
         for submission in Submission.objects.filter(student=request.user)
     }
 
+    def sort_rank(assignment):
+        submission = my_submissions.get(assignment.pk)
+
+        if submission is None:
+            return 0
+
+        if submission.status == Submission.Status.IN_PROGRESS:
+            return 1
+
+        return 2
+
     rows = [
         {
             "assignment": assignment,
             "submission": my_submissions.get(assignment.pk),
         }
-        for assignment in assignments
+        for assignment in sorted(
+            Assignment.objects.all(),
+            key=lambda a: (sort_rank(a), -a.created_at.timestamp()),
+        )
     ]
 
     return render(
         request,
-        "assignments/assignment_list_mentee.html",
+        "assignments/assignment_workspace_mentee.html",
         {
             "rows": rows,
         },

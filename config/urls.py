@@ -10,7 +10,7 @@ urlpatterns = [
     path(
         "",
         RedirectView.as_view(
-            url="/notes/",
+            url="/assignments/",
             permanent=False,
         ),
         name="home",
@@ -33,6 +33,7 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("notes/", include("notes.urls")),
     path("assignments/", include("assignments.urls")),
+    path("qna/", include("qna.urls")),
 ]
 
 if settings.DEBUG:

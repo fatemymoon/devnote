@@ -27,7 +27,7 @@
         <div class="container header-inner">
             <a
                 class="brand"
-                href="{% url 'notes:list' %}"
+                href="{% url 'assignments:list' %}"
             >
                 개발노트
             </a>
@@ -38,19 +38,20 @@
                         {{ user.username }}님
                     </span>
 
-                    <a href="{% url 'notes:list' %}">
-                        노트 목록
-                    </a>
-
                     <a href="{% url 'assignments:list' %}">
-                        과제
+                        과제목록
                     </a>
 
-                    <a
-                        class="button button-primary"
-                        href="{% url 'notes:create' %}"
-                    >
-                        새 노트
+                    <a href="{% url 'assignments:workspace' %}">
+                        {% if user.profile.role == "mentor" %}
+                            과제출제
+                        {% else %}
+                            과제제출
+                        {% endif %}
+                    </a>
+
+                    <a href="{% url 'qna:list' %}">
+                        질의응답
                     </a>
 
                     {% if user.is_staff %}

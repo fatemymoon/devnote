@@ -1,15 +1,15 @@
 {% extends "notes/base.html" %}
 
 {% block title %}
-    과제 목록
+    과제제출
 {% endblock %}
 
 {% block content %}
     <section class="page-header">
-        <h1>과제</h1>
+        <h1>과제제출</h1>
 
         <p class="page-description">
-            멘토가 등록한 과제를 확인하고 수행 결과를 제출합니다.
+            내 제출 현황입니다. 아직 제출하지 않은 과제가 위쪽에 표시됩니다.
         </p>
     </section>
 
@@ -24,15 +24,7 @@
                     </h2>
 
                     <div class="note-meta">
-                        {% if row.submission %}
-                            <span class="badge">
-                                {{ row.submission.get_status_display }}
-                            </span>
-                        {% else %}
-                            <span class="badge">
-                                미제출
-                            </span>
-                        {% endif %}
+                        {% include "assignments/_status_badge.html" with submission=row.submission %}
 
                         {% if row.assignment.due_date %}
                             <span class="badge">
@@ -41,14 +33,12 @@
                         {% endif %}
                     </div>
 
-                    <p class="note-preview">
-                        {{ row.assignment.description|truncatechars:180|linebreaksbr }}
-                    </p>
-
-                    <p class="note-date">
-                        등록일:
-                        {{ row.assignment.created_at|date:"Y년 m월 d일 H:i" }}
-                    </p>
+                    {% if row.submission %}
+                        <p class="note-date">
+                            마지막 수정:
+                            {{ row.submission.updated_at|date:"Y년 m월 d일 H:i" }}
+                        </p>
+                    {% endif %}
 
                     <div class="action-row">
                         <a
@@ -56,9 +46,9 @@
                             href="{% url 'assignments:detail' row.assignment.pk %}"
                         >
                             {% if row.submission %}
-                                제출 내용 보기
+                                제출 내용 수정
                             {% else %}
-                                과제 확인하고 제출하기
+                                제출하러 가기
                             {% endif %}
                         </a>
                     </div>

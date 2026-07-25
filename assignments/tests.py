@@ -171,6 +171,102 @@ class AssignmentFlowTests(RoleSetupMixin, TestCase):
         self.assertContains(response, "student")
 
 
+class BoardAndWorkspaceTests(RoleSetupMixin, TestCase):
+    """게시판형 과제목록과 역할별 작업 화면을 검증합니다."""
+
+    def test_board_uses_board_template_for_both_roles(self):
+        for username in ["mentor", "student"]:
+            self.client.login(username=username, password="pass1234")
+
+            response = self.client.get(reverse("assignments:list"))
+
+            self.assertEqual(response.status_code, 200)
+            self.assertTemplateUsed(
+                response,
+                "assignments/assignment_list.html",
+            )
+
+    def test_board_search_filters_results(self):
+        Assignment.objects.create(
+            title="Docker 볼륨 정리",
+            description="설명",
+            created_by=self.mentor,
+        )
+
+        self.client.login(username="student", password="pass1234")
+
+        response = self.client.get(
+            reverse("assignments:list"),
+            {"q": "Docker"},
+        )
+
+        self.assertContains(response, "Docker 볼륨 정리")
+        self.assertNotContains(response, "테스트 과제")
+
+    def test_board_paginates_by_20(self):
+        for i in range(25):
+            Assignment.objects.create(
+                title=f"과제 {i}",
+                description="설명",
+                created_by=self.mentor,
+            )
+
+        self.client.login(username="student", password="pass1234")
+
+        response = self.client.get(reverse("assignments:list"))
+        self.assertEqual(len(response.context["rows"]), 20)
+
+        response = self.client.get(
+            reverse("assignments:list"),
+            {"page": 2},
+        )
+        self.assertEqual(len(response.context["rows"]), 6)
+
+    def test_mentee_workspace_puts_unsubmitted_first(self):
+        submitted = Assignment.objects.create(
+            title="제출한 과제",
+            description="설명",
+            created_by=self.mentor,
+        )
+        Submission.objects.create(
+            assignment=submitted,
+            student=self.student,
+            content="내용",
+            status=Submission.Status.COMPLETED,
+        )
+
+        self.client.login(username="student", password="pass1234")
+
+        response = self.client.get(reverse("assignments:workspace"))
+
+        rows = response.context["rows"]
+        self.assertEqual(rows[0]["assignment"], self.assignment)
+        self.assertEqual(rows[-1]["assignment"], submitted)
+
+    def test_mentor_workspace_shows_only_own_assignments(self):
+        other_mentor = User.objects.create_user(
+            username="mentor2",
+            password="pass1234",
+        )
+        Profile.objects.create(
+            user=other_mentor,
+            role=Profile.Role.MENTOR,
+        )
+        Assignment.objects.create(
+            title="다른 멘토 과제",
+            description="설명",
+            created_by=other_mentor,
+        )
+
+        self.client.login(username="mentor", password="pass1234")
+
+        response = self.client.get(reverse("assignments:workspace"))
+
+        titles = [a.title for a in response.context["assignments"]]
+        self.assertIn("테스트 과제", titles)
+        self.assertNotIn("다른 멘토 과제", titles)
+
+
 class SmsRecipientTests(RoleSetupMixin, TestCase):
     """문자 수신자 선정 로직을 검증합니다."""
 

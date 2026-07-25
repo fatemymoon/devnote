@@ -1,0 +1,9 @@
+{% if submission %}
+    {% if submission.status == "completed" %}
+        <span class="badge badge-success">완료</span>
+    {% else %}
+        <span class="badge badge-progress">진행중</span>
+    {% endif %}
+{% else %}
+    <span class="badge badge-muted">미제출</span>
+{% endif %}

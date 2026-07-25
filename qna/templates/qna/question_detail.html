@@ -1,0 +1,112 @@
+{% extends "notes/base.html" %}
+
+{% block title %}
+    질문 상세
+{% endblock %}
+
+{% block content %}
+    <section class="page-header">
+        <p>
+            <a href="{% url 'qna:list' %}">
+                ← 질문내역으로
+            </a>
+        </p>
+
+        <h1>질문</h1>
+    </section>
+
+    <article class="card">
+        <div class="note-meta">
+            <span class="badge">
+                {{ question.student.username }}
+            </span>
+
+            {% if question.answer %}
+                <span class="badge badge-success">답변완료</span>
+            {% else %}
+                <span class="badge badge-progress">대기중</span>
+            {% endif %}
+        </div>
+
+        <div class="note-content">
+            {{ question.content|linebreaksbr }}
+        </div>
+
+        <p class="note-date">
+            작성일:
+            {{ question.created_at|date:"Y년 m월 d일 H:i" }}
+        </p>
+
+        {% if question.student == user %}
+            <div class="action-row">
+                <a
+                    class="button button-secondary"
+                    href="{% url 'qna:update' question.pk %}"
+                >
+                    수정
+                </a>
+
+                <a
+                    class="button button-danger"
+                    href="{% url 'qna:delete' question.pk %}"
+                >
+                    삭제
+                </a>
+            </div>
+        {% endif %}
+    </article>
+
+    <section class="page-header">
+        <h2>답변</h2>
+    </section>
+
+    {% if answer_form %}
+        <section class="card form-card">
+            {% if answer %}
+                <p class="page-description">
+                    이미 작성한 답변을 수정합니다.
+                </p>
+            {% endif %}
+
+            <form method="post">
+                {% csrf_token %}
+
+                {{ answer_form.as_p }}
+
+                <div class="action-row">
+                    <button
+                        class="button button-primary"
+                        type="submit"
+                    >
+                        {% if answer %}
+                            답변 수정
+                        {% else %}
+                            답변 등록
+                        {% endif %}
+                    </button>
+                </div>
+            </form>
+        </section>
+    {% elif answer %}
+        <article class="card">
+            <div class="note-meta">
+                <span class="badge">
+                    {{ answer.mentor.username }}
+                </span>
+            </div>
+
+            <div class="note-content">
+                {{ answer.content|linebreaksbr }}
+            </div>
+
+            <p class="note-date">
+                작성일:
+                {{ answer.created_at|date:"Y년 m월 d일 H:i" }}
+            </p>
+        </article>
+    {% else %}
+        <div class="empty-state">
+            아직 답변이 등록되지 않았습니다.
+        </div>
+    {% endif %}
+{% endblock %}

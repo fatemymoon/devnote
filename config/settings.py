@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "notes.apps.NotesConfig",
     "assignments.apps.AssignmentsConfig",
+    "qna.apps.QnaConfig",
 ]
 
 MIDDLEWARE = [
@@ -150,7 +151,7 @@ STORAGES = {
 }
 
 LOGIN_URL = "login"
-LOGIN_REDIRECT_URL = "notes:list"
+LOGIN_REDIRECT_URL = "assignments:list"
 LOGOUT_REDIRECT_URL = "login"
 
 
