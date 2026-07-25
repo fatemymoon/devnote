@@ -1,0 +1,38 @@
+{% extends "notes/base.html" %}
+
+{% block title %}
+    제출물 삭제
+{% endblock %}
+
+{% block content %}
+    <section class="page-header">
+        <h1>제출물 삭제</h1>
+    </section>
+
+    <section class="card">
+        <p>
+            <strong>{{ submission.assignment.title }}</strong>
+            과제에 제출한 내용을 정말 삭제할까요?
+        </p>
+
+        <form method="post">
+            {% csrf_token %}
+
+            <div class="action-row">
+                <button
+                    class="button button-danger"
+                    type="submit"
+                >
+                    삭제
+                </button>
+
+                <a
+                    class="button button-secondary"
+                    href="{% url 'assignments:detail' submission.assignment.pk %}"
+                >
+                    취소
+                </a>
+            </div>
+        </form>
+    </section>
+{% endblock %}

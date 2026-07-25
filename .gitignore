@@ -16,6 +16,9 @@ db.sqlite3
 # 배포 과정에서 수집되는 정적 파일
 staticfiles/
 
+# 사용자가 업로드한 첨부파일
+media/
+
 # VS Code 설정과 운영체제 임시 파일
 .vscode/
 .DS_Store

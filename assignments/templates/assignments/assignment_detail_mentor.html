@@ -1,0 +1,97 @@
+{% extends "notes/base.html" %}
+
+{% block title %}
+    {{ assignment.title }}
+{% endblock %}
+
+{% block content %}
+    <section class="page-header">
+        <p>
+            <a href="{% url 'assignments:list' %}">
+                ← 과제 목록으로
+            </a>
+        </p>
+
+        <h1>{{ assignment.title }}</h1>
+    </section>
+
+    <article class="card">
+        <div class="note-meta">
+            {% if assignment.due_date %}
+                <span class="badge">
+                    마감 {{ assignment.due_date|date:"Y년 m월 d일" }}
+                </span>
+            {% endif %}
+        </div>
+
+        <div class="note-content">
+            {{ assignment.description|linebreaksbr }}
+        </div>
+
+        <p class="note-date">
+            등록일:
+            {{ assignment.created_at|date:"Y년 m월 d일 H:i" }}
+        </p>
+
+        <div class="action-row">
+            <a
+                class="button button-secondary"
+                href="{% url 'assignments:update' assignment.pk %}"
+            >
+                수정
+            </a>
+
+            <a
+                class="button button-danger"
+                href="{% url 'assignments:delete' assignment.pk %}"
+            >
+                삭제
+            </a>
+        </div>
+    </article>
+
+    <section class="page-header">
+        <h2>제출 현황</h2>
+    </section>
+
+    {% if submissions %}
+        {% for submission in submissions %}
+            <article class="card">
+                <h3>{{ submission.student.username }}</h3>
+
+                <div class="note-meta">
+                    <span class="badge">
+                        {{ submission.get_status_display }}
+                    </span>
+                </div>
+
+                <div class="note-content">
+                    {{ submission.content|linebreaksbr }}
+                </div>
+
+                {% if submission.attachment %}
+                    <p>
+                        첨부파일:
+                        <a href="{{ submission.attachment.url }}">
+                            {{ submission.attachment.name }}
+                        </a>
+                    </p>
+                {% endif %}
+
+                <p class="note-date">
+                    최초 제출:
+                    {{ submission.submitted_at|date:"Y년 m월 d일 H:i" }}
+                </p>
+
+                <p class="note-date">
+                    마지막 수정:
+                    {{ submission.updated_at|date:"Y년 m월 d일 H:i" }}
+                </p>
+            </article>
+        {% endfor %}
+    {% else %}
+        <div class="empty-state">
+            아직 제출한 학생이 없습니다.
+        </div>
+    {% endif %}
+{% endblock %}

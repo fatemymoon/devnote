@@ -1,0 +1,87 @@
+{% extends "notes/base.html" %}
+
+{% block title %}
+    과제 목록
+{% endblock %}
+
+{% block content %}
+    <section class="page-header">
+        <h1>과제 관리</h1>
+
+        <p class="page-description">
+            등록한 과제와 학생들의 제출 현황을 확인합니다.
+        </p>
+    </section>
+
+    <div class="action-row">
+        <a
+            class="button button-primary"
+            href="{% url 'assignments:create' %}"
+        >
+            새 과제 등록
+        </a>
+    </div>
+
+    {% if assignments %}
+        <section class="note-list">
+            {% for assignment in assignments %}
+                <article class="card note-card">
+                    <h2>
+                        <a href="{% url 'assignments:detail' assignment.pk %}">
+                            {{ assignment.title }}
+                        </a>
+                    </h2>
+
+                    <div class="note-meta">
+                        <span class="badge">
+                            제출 {{ assignment.submission_count }}건
+                            (완료 {{ assignment.completed_count }}건)
+                        </span>
+
+                        {% if assignment.due_date %}
+                            <span class="badge">
+                                마감 {{ assignment.due_date|date:"Y년 m월 d일" }}
+                            </span>
+                        {% endif %}
+                    </div>
+
+                    <p class="note-preview">
+                        {{ assignment.description|truncatechars:180|linebreaksbr }}
+                    </p>
+
+                    <p class="note-date">
+                        등록일:
+                        {{ assignment.created_at|date:"Y년 m월 d일 H:i" }}
+                    </p>
+
+                    <div class="action-row">
+                        <a
+                            class="button button-primary"
+                            href="{% url 'assignments:detail' assignment.pk %}"
+                        >
+                            제출 현황 보기
+                        </a>
+
+                        <a
+                            class="button button-secondary"
+                            href="{% url 'assignments:update' assignment.pk %}"
+                        >
+                            수정
+                        </a>
+
+                        <a
+                            class="button button-danger"
+                            href="{% url 'assignments:delete' assignment.pk %}"
+                        >
+                            삭제
+                        </a>
+                    </div>
+                </article>
+            {% endfor %}
+        </section>
+    {% else %}
+        <div class="empty-state">
+            아직 등록된 과제가 없습니다.
+        </div>
+    {% endif %}
+{% endblock %}

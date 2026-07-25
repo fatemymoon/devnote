@@ -1,0 +1,35 @@
+{% extends "notes/base.html" %}
+
+{% block title %}
+    {{ form_title }}
+{% endblock %}
+
+{% block content %}
+    <section class="page-header">
+        <h1>{{ form_title }}</h1>
+    </section>
+
+    <section class="card form-card">
+        <form method="post">
+            {% csrf_token %}
+
+            {{ form.as_p }}
+
+            <div class="action-row">
+                <button
+                    class="button button-primary"
+                    type="submit"
+                >
+                    저장
+                </button>
+
+                <a
+                    class="button button-secondary"
+                    href="{% url 'assignments:list' %}"
+                >
+                    취소
+                </a>
+            </div>
+        </form>
+    </section>
+{% endblock %}

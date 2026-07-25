@@ -17,7 +17,7 @@ RUN pip install --no-cache-dir --upgrade pip \
 
 COPY --chown=app:app . /app
 
-RUN mkdir -p /app/staticfiles \
+RUN mkdir -p /app/staticfiles /app/media \
     && chown -R app:app /app
 
 USER app
