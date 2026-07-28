@@ -49,6 +49,11 @@ CSRF_TRUSTED_ORIGINS = [o for o in os.environ.get("DJANGO_CSRF_TRUSTED_ORIGINS",
 # Django가 "이 요청은 HTTPS로 들어왔다"고 인식하게 합니다.
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
+# 리버스 프록시(nginx)가 /devNote 접두사를 떼고 전달하는 환경에서,
+# Django가 만드는 모든 URL(리다이렉트, 폼 action, static 등)에
+# 접두사를 다시 붙이도록 알려줍니다. 로컬 개발에서는 비워두면 None이 되어 영향 없음.
+FORCE_SCRIPT_NAME = os.environ.get("DJANGO_FORCE_SCRIPT_NAME") or None
+
 
 # 이 프로젝트에서 사용하는 앱(기능 묶음) 목록
 
