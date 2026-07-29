@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(PYTHONPATH=\"/tmp/claude-1000/-home-moon-projects-devnote/2e8cbe6c-9e74-4646-b1db-b0ceccdee9f3/scratchpad:.\" DJANGO_SETTINGS_MODULE=test_settings .venv/bin/python manage.py test assignments)",
+      "Bash(docker compose *)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://127.0.0.1:8000/assignments/ -H \"Host: localhost\")",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" -L http://127.0.0.1:8000/login/ -H \"Host: localhost\")"
+    ]
+  }
+}

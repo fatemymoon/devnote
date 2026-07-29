@@ -4,7 +4,7 @@
 services:
   # ── Django 웹 애플리케이션 컨테이너 ──────────────────────────────
   web:
-    image: devnote:1.0.0
+    image: mentationlab/devnote:1.0.0
     build:
       context: .              # 현재 폴더를 빌드 대상으로
       dockerfile: Dockerfile  # 위의 Dockerfile로 이미지를 빌드
@@ -35,7 +35,7 @@ services:
     # 호스트의 127.0.0.1:8000 → 컨테이너의 8000 포트로 연결.
     # 127.0.0.1로 제한해서 외부에서 직접 접근하지 못하게 함 (프록시를 통해서만 접근)
     ports:
-      - "127.0.0.1:8000:8000"
+      - "8000:8000"
 
     # 호스트 폴더와 컨테이너 폴더를 공유 (컨테이너를 지워도 파일 유지)
     volumes:

@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>MentationLab</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family:
+        Pretendard,
+        "Noto Sans KR",
+        Arial,
+        sans-serif;
+      background: #f4f6f8;
+      color: #1f2937;
+    }
+
+    header {
+      padding: 40px 20px 25px;
+      text-align: center;
+      background: #1f2937;
+      color: #ffffff;
+    }
+
+    header h1 {
+      margin: 0 0 10px;
+      font-size: 32px;
+    }
+
+    header p {
+      margin: 0;
+      color: #d1d5db;
+      font-size: 16px;
+    }
+
+    main {
+      width: min(1100px, 90%);
+      margin: 40px auto;
+    }
+
+    .service-list {
+      display: grid;
+      grid-template-columns:
+        repeat(auto-fit, minmax(240px, 1fr));
+      gap: 20px;
+    }
+
+    .service-card {
+      position: relative;
+      display: block;
+      padding: 26px;
+      min-height: 160px;
+      border: 1px solid #e5e7eb;
+      border-radius: 14px;
+      background: #ffffff;
+      color: inherit;
+      text-decoration: none;
+      box-shadow: 0 5px 15px rgb(0 0 0 / 6%);
+      transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease,
+        border-color 0.2s ease;
+    }
+
+    .service-card:hover {
+      transform: translateY(-5px);
+      border-color: #64748b;
+      box-shadow: 0 12px 25px rgb(0 0 0 / 12%);
+    }
+
+    .service-icon {
+      margin-bottom: 15px;
+      font-size: 34px;
+    }
+
+    .service-name {
+      margin: 0 0 8px;
+      font-size: 21px;
+    }
+
+    .service-description {
+      margin: 0;
+      color: #6b7280;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    /* 사용자 정의 Hover Tooltip */
+    .tooltip {
+      position: absolute;
+      left: 50%;
+      bottom: calc(100% + 10px);
+      z-index: 10;
+
+      width: max-content;
+      max-width: 280px;
+      padding: 9px 12px;
+      border-radius: 7px;
+
+      background: #111827;
+      color: #ffffff;
+      font-size: 13px;
+      line-height: 1.4;
+      text-align: center;
+
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+
+      transform: translateX(-50%) translateY(5px);
+      transition:
+        opacity 0.2s ease,
+        transform 0.2s ease,
+        visibility 0.2s ease;
+    }
+
+    .tooltip::after {
+      content: "";
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      border: 6px solid transparent;
+      border-top-color: #111827;
+      transform: translateX(-50%);
+    }
+
+    .service-card:hover .tooltip,
+    .service-card:focus .tooltip {
+      opacity: 1;
+      visibility: visible;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .empty-message {
+      padding: 30px;
+      text-align: center;
+      color: #6b7280;
+      background: #ffffff;
+      border-radius: 12px;
+    }
+
+    footer {
+      padding: 25px;
+      text-align: center;
+      color: #9ca3af;
+      font-size: 13px;
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <h1>MentationLab</h1>
+    <p>MentationLab에 오신 것을 환영합니다.</p>
+  </header>
+
+  <main>
+    <!-- JavaScript가 접속 메뉴를 생성하는 영역 -->
+    <section
+      id="service-list"
+      class="service-list"
+      aria-label="서비스 접속 목록"
+    ></section>
+  </main>
+
+  <footer>
+    &copy; <span id="current-year"></span> MentationLab
+  </footer>
+
+  <script>
+    /*
+     * 접속 서비스 설정
+     *
+     * 새로운 서비스를 추가할 때는 아래 배열에
+     * 객체를 하나 추가하면 됩니다.
+     */
+    const services = [
+      {
+        name: "개발노트",
+        url: "https://www.mentationlab.tech:8000",
+        icon: "📝",
+        description: "개발 과정과 학습 내용을 기록합니다.",
+        tooltip: "개발노트 서비스로 이동합니다."
+      },
+      {
+        name: "CNCjs",
+        url: "http://192.168.0.10:8000",
+        icon: "⚙️",
+        description: "CNC 장비를 웹에서 제어합니다.",
+        tooltip: "CNCjs 장비 제어 화면으로 이동합니다."
+      },
+      {
+        name: "서버 관리[Cockpit]",
+        url: "https://localhost:9090",
+        icon: "🖥️",
+        description: "접속된 서버 상태와 서비스를 관리합니다.",
+        tooltip: "서버 관리 페이지로 이동합니다."
+      },
+            {
+        name: "추가1",
+        url: "추가한 서비스 URL",
+        icon: "🖥️",
+        description: "추가 1번 서비스 설명",
+        tooltip: "추가 1번 서비스로 이동합니다."
+      }
+    ];
+
+    const serviceList = document.getElementById("service-list");
+
+    /**
+     * HTML 특수문자를 변환합니다.
+     * 서비스명이나 설명에 외부 데이터가 들어올 때
+     * HTML 삽입 문제를 방지합니다.
+     */
+    function escapeHtml(value) {
+      return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    /**
+     * 서비스 카드 한 개를 생성합니다.
+     */
+    function createServiceCard(service) {
+      const card = document.createElement("a");
+
+      card.className = "service-card";
+      card.href = service.url;
+      card.target = "_blank";
+      card.rel = "noopener noreferrer";
+
+      /*
+       * title 속성은 브라우저 기본 툴팁입니다.
+       * 별도로 만든 tooltip과 함께 사용할 수 있습니다.
+       */
+      card.title = service.tooltip;
+
+      card.innerHTML = `
+        <div class="service-icon" aria-hidden="true">
+          ${escapeHtml(service.icon)}
+        </div>
+
+        <h2 class="service-name">
+          ${escapeHtml(service.name)}
+        </h2>
+
+        <p class="service-description">
+          ${escapeHtml(service.description)}
+        </p>
+
+        <span class="tooltip" role="tooltip">
+          ${escapeHtml(service.tooltip)}
+        </span>
+      `;
+
+      return card;
+    }
+
+    /**
+     * 배열에 등록된 서비스를 화면에 표시합니다.
+     */
+    function renderServices() {
+      serviceList.replaceChildren();
+
+      if (services.length === 0) {
+        const message = document.createElement("p");
+
+        message.className = "empty-message";
+        message.textContent = "등록된 접속 서비스가 없습니다.";
+
+        serviceList.appendChild(message);
+        return;
+      }
+
+      services.forEach((service) => {
+        const card = createServiceCard(service);
+        serviceList.appendChild(card);
+      });
+    }
+
+    /**
+     * 푸터 연도를 현재 연도로 자동 표시합니다.
+     */
+    document.getElementById("current-year").textContent =
+      new Date().getFullYear();
+
+    renderServices();
+  </script>
+</body>
+</html>
