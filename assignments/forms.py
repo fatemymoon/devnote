@@ -1,3 +1,9 @@
+"""과제 앱의 입력 폼 정의.
+
+- AssignmentForm: 멘토의 과제 등록/수정 폼
+- SubmissionForm: 학생의 과제 제출 폼 (첨부파일 포함)
+"""
+
 from django import forms
 
 from .models import Assignment, Submission
@@ -27,6 +33,7 @@ class AssignmentForm(forms.ModelForm):
                     "placeholder": "과제 내용을 입력하세요.",
                 }
             ),
+            # type="date" → 브라우저 기본 달력 선택 UI 사용
             "due_date": forms.DateInput(
                 attrs={
                     "type": "date",

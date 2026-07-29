@@ -1,15 +1,24 @@
+# 웹 서버(web)와 데이터베이스(db) 두 컨테이너를 한 번에 띄우는 설정입니다.
+# 실행: docker compose up -d
+
 services:
+  # ── Django 웹 애플리케이션 컨테이너 ──────────────────────────────
   web:
     image: devnote:1.0.0
     build:
-      context: .
-      dockerfile: Dockerfile
+      context: .              # 현재 폴더를 빌드 대상으로
+      dockerfile: Dockerfile  # 위의 Dockerfile로 이미지를 빌드
 
     container_name: devnote-web
 
+    # DB 접속 정보, SECRET_KEY 등 환경 변수를 이 파일에서 읽어옵니다.
     env_file:
       - .env.docker
 
+    # 컨테이너 시작 시 실행할 명령:
+    # 1) migrate: DB 테이블을 최신 상태로 반영
+    # 2) collectstatic: 정적 파일을 staticfiles/ 폴더에 수집
+    # 3) gunicorn: 운영용 WSGI 서버 실행 (워커 2개, 8000번 포트)
     command:
       - sh
       - -c
@@ -23,21 +32,26 @@ services:
           --access-logfile - \
           --error-logfile -
 
+    # 호스트의 127.0.0.1:8000 → 컨테이너의 8000 포트로 연결.
+    # 127.0.0.1로 제한해서 외부에서 직접 접근하지 못하게 함 (프록시를 통해서만 접근)
     ports:
       - "127.0.0.1:8000:8000"
 
+    # 호스트 폴더와 컨테이너 폴더를 공유 (컨테이너를 지워도 파일 유지)
     volumes:
-      - ./staticfiles:/app/staticfiles
-      - ./media:/app/media
+      - ./staticfiles:/app/staticfiles  # 수집된 정적 파일
+      - ./media:/app/media              # 사용자가 업로드한 첨부파일
 
+    # DB 컨테이너가 healthcheck를 통과한 뒤에만 웹 컨테이너를 시작
     depends_on:
       db:
         condition: service_healthy
 
-    restart: unless-stopped
+    restart: unless-stopped  # 오류로 죽으면 자동 재시작 (직접 중지한 경우 제외)
 
-    init: true
+    init: true  # 좀비 프로세스 정리를 위한 init 프로세스 사용
 
+    # 30초마다 8000번 포트가 열려 있는지 확인해서 컨테이너 상태를 판단
     healthcheck:
       test:
         - CMD
@@ -47,8 +61,9 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 30s
+      start_period: 30s  # 시작 직후 30초는 실패해도 봐줌 (부팅 시간 고려)
 
+  # ── PostgreSQL 데이터베이스 컨테이너 ─────────────────────────────
   db:
     image: postgres:16
     container_name: devnote-db
@@ -56,21 +71,25 @@ services:
     env_file:
       - .env.docker
 
+    # 컨테이너 첫 실행 시 만들 DB 이름/계정 (값은 .env.docker에서 가져옴)
     environment:
       POSTGRES_DB: ${DB_NAME}
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
 
+    # DB 데이터를 도커 볼륨에 저장 (컨테이너를 지워도 데이터 유지)
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
     restart: unless-stopped
 
+    # pg_isready로 DB가 접속 가능한 상태인지 10초마다 확인
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
       interval: 10s
       timeout: 5s
       retries: 5
 
+# 위에서 사용한 도커 볼륨 선언
 volumes:
   postgres_data:

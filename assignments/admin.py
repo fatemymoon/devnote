@@ -1,3 +1,8 @@
+"""관리자 페이지(/admin/)에서 프로필/과제/제출물을 관리하기 위한 설정.
+
+특히 Profile은 여기서 사용자의 역할(멘토/멘티)과 휴대폰 번호를 지정합니다.
+"""
+
 from django.contrib import admin
 
 from .models import Assignment, Profile, Submission
