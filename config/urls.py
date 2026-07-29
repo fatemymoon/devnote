@@ -8,13 +8,13 @@ from django.views.generic import RedirectView
 
 urlpatterns = [
     path(
-        "",
-        RedirectView.as_view(
-            url="/assignments/",
-            permanent=False,
-        ),
-        name="home",
+    "",
+    RedirectView.as_view(
+        pattern_name="assignments:list",
+        permanent=False,
     ),
+    name="home",
+),
 
     path(
         "login/",
