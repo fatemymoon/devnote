@@ -15,13 +15,13 @@ urlpatterns = [
     # 루트 주소(/)로 오면 과제 목록으로 이동시킵니다.
     # permanent=False → 302 임시 리다이렉트 (나중에 홈 화면을 바꿔도 브라우저 캐시 영향 없음)
     path(
-        "",
-        RedirectView.as_view(
-            url="/assignments/",
-            permanent=False,
-        ),
-        name="home",
+    "",
+    RedirectView.as_view(
+        pattern_name="assignments:list",
+        permanent=False,
     ),
+    name="home",
+),
 
     # 로그인 페이지: Django 기본 LoginView에 우리가 만든 템플릿만 지정
     path(
